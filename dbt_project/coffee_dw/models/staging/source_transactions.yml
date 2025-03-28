@@ -1,0 +1,13 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: public
+    tables:
+      - name: transactions
+        description: "Coffee sales table"
+        columns:
+          - name: _id
+            tests:
+              - not_null
+              - unique

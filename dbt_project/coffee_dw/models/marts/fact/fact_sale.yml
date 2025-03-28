@@ -1,0 +1,53 @@
+version: 2
+
+models:
+  - name: fact_sale
+    columns:
+      - name: sales_key
+        description: The surrogate key of the sale
+        tests:
+          - not_null
+          - unique
+
+      - name: store_key
+        description: The foreign key of the store 
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_store')
+              field: store_key
+
+      - name: product_key
+        description: The foreign key of the product
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_product')
+              field: product_key
+
+      - name: payment_method_key
+        description: The foreign key of the payment method
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_payment')
+              field: payment_method_key
+
+      - name: sales_id
+        description: The natural key of the sale
+        tests: 
+          - not_null
+
+      - name: timestamp
+        description: The timestamp of the sale
+
+      - name: quantity
+        description: The quantity of the product
+        tests:
+          - not_null
+
+      - name: revenue
+        description: The revenue obtained by multiplying the price and quantity
+        tests:
+          - not_null  
+     

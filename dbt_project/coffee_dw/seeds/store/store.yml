@@ -1,0 +1,11 @@
+version: 2
+
+seeds:
+  - name: store
+    config:
+      schema: raw
+      column_types:
+        id: integer
+        name: varchar
+        address: varchar
+        district: varchar

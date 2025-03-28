@@ -1,0 +1,137 @@
+version: '3'
+
+services:
+  kafka:
+    container_name: kafka
+    image: 'bitnami/kafka:latest'
+    user: root
+    ports:
+      - '9094:9094'
+    networks:
+      - myNetwork
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+    volumes:
+      - ./docker_volumes/kafka:/bitnami/kafka:rw
+
+  init-kafka:
+    image: 'bitnami/kafka:latest'
+    depends_on:
+      - kafka
+    networks:
+      - myNetwork
+    entrypoint: ["/bin/bash", "-c"]
+    command: 
+      - |
+        echo "Waiting for Kafka to be ready..."
+        while ! kafka-topics.sh --bootstrap-server kafka:9092 --list; do
+          sleep 5
+        done
+
+        echo "🚀 Kafka is ready. Creating topics ...... 🚀"
+        kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1 --config cleanup.policy=compact  --topic connect-configs
+        kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1 --config cleanup.policy=compact  --topic connect-offsets
+        kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1 --config cleanup.policy=compact  --topic connect-status
+
+        echo '🚀 Topic created successfully! 🚀'
+        kafka-topics.sh --bootstrap-server kafka:9092 --list
+
+  kafka-ui:
+    container_name: kafka-ui-1
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - 8000:8080
+    depends_on:
+      - kafka
+    networks:
+      - myNetwork
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:9092
+      DYNAMIC_CONFIG_ENABLED: 'true'
+    
+  connect:
+    image: confluentinc/cp-kafka-connect:latest
+    hostname: connect
+    container_name: connect
+    depends_on:
+      - kafka
+    ports:
+      - "8083:8083"
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: "kafka:9092"
+      CONNECT_REST_ADVERTISED_HOST_NAME: "connect"
+      CONNECT_GROUP_ID: "connect-cluster"
+      CONNECT_CONFIG_STORAGE_TOPIC: "connect-configs"
+      CONNECT_OFFSET_STORAGE_TOPIC: "connect-offsets"
+      CONNECT_STATUS_STORAGE_TOPIC: "connect-status"
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_PLUGIN_PATH: "/usr/share/confluent-hub-components"
+    volumes:
+      - ./docker_volumes/kafka_connect:/data
+    networks:
+      - myNetwork
+    command:
+      - bash
+      - -c
+      - |
+        confluent-hub install --no-prompt mongodb/kafka-connect-mongodb:latest
+        confluent-hub install --no-prompt confluentinc/kafka-connect-elasticsearch:latest
+        /etc/confluent/docker/run
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.5.0
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    volumes:
+      - ./docker_volumes/elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - myNetwork
+  
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.5.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - myNetwork
+
+  dbt:
+    image: ghcr.io/dbt-labs/dbt-postgres:latest
+    container_name: dbt
+    volumes:
+      - ./dbt_project:/usr/app
+    environment:
+      DBT_PROFILES_DIR: /usr/app
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    working_dir: /usr/app
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        echo "🚀 DBT IS RUNNING... 🚀"
+        dbt debug
+        echo "========================================================="
+        tail -f /dev/null
+    ports:
+      - "8080:8080"
+    networks:
+      - myNetwork
+  
+networks:
+  myNetwork:

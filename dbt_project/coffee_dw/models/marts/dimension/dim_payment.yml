@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: dim_payment
+    columns:
+      - name: payment_method_id
+        description: The natural key of payment method
+        tests:
+          - not_null
+          - unique
