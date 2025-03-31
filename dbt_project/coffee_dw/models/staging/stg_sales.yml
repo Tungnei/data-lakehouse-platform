@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: stg_sale
+  - name: stg_sales
     columns:
       - name: sales_id
         description: "The natural key of the sale"
