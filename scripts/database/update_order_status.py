@@ -1,3 +1,7 @@
+# Purpose: This script periodically syncs completed order statuses from Redis to MySQL by scanning keys in Redis,
+#          performing a batch update in MySQL for orders marked as 'completed', and deleting the corresponding keys
+#          from Redis after a successful update. It runs every 10 minutes.
+
 import time
 import logging
 from pathlib import Path
