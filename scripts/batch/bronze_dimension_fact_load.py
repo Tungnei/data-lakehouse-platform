@@ -121,7 +121,7 @@ def incremental_load_order_with_suggestion(spark: SparkSession) -> None:
         order_with_suggestion = spark.read \
                                 .format("kafka") \
                                 .option("kafka.bootstrap.servers", bootstrap_servers_str) \
-                                .option("subscribe", "order_suggestion_confirmed") \
+                                .option("subscribe", "order_suggestion_accepted") \
                                 .option("startingOffsets", "earliest") \
                                 .load()
         
