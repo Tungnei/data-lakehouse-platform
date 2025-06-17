@@ -45,16 +45,16 @@ def read_parquet_cached(path: str):
 
 def run_check(df, check: Check, label: str):
     result = VerificationSuite(spark).onData(df).addCheck(check).run()
-    logger.info(f"[{label}] > Data quality check completed")
+    logger.info(f"[{label}] - Data Quality Check Completed")
     return result
 
 def check_uniqueness(df, column_name: str, label: str):
     total = df.count()
     distinct = df.select(countDistinct(column_name)).first()[0]
     if total == distinct:
-        logger.info(f"[{label}] - {column_name} is unique.")
+        logger.info(f"[{label}] - Data Constraint Check Passed")
     else:
-        logger.info(f"[{label}] - {column_name} is NOT unique: {total} rows vs {distinct} unique.")
+        logger.info(f"[{label}] - Data Constraint Check Failed")
 
 # LOAD DATA
 silver_path = "s3a://silver-layer"
@@ -96,7 +96,7 @@ check_payment_method = Check(spark, CheckLevel.Error, "slv.payment_method") \
     .hasCompleteness("method_id", lambda x: x >= 1.0) \
     .hasCompleteness("updated_at", lambda x: x >= 1.0)
 
-run_check(payment_method_df, check_payment_method, "Payment Method Check")
+run_check(payment_method_df, check_payment_method, "slv.payment_method")
 
 # Orders
 check_uniqueness(order_df, "order_id", "slv.orders")
@@ -119,8 +119,5 @@ check_order_detail = Check(spark, CheckLevel.Error, "slv.order_details") \
 
 run_check(order_detail_df, check_order_detail, "slv.order_details")
 
-logger.info("======> Finished all checks.")
 spark.stop()
-logger.info("======> Spark stopped.")
-
 os._exit(0)
