@@ -183,7 +183,7 @@ def consumer_worker(worker_id: int):
         logger.info("Kafka producer closed.")
 
 def main() -> None:
-    num_workers = 5
+    num_workers = 3
     processes = []
 
     for i in range(num_workers):
