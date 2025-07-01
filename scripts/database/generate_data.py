@@ -1,11 +1,9 @@
-# ==================================================================================
-# SCRIPT: Validate Bronze Layer Data Quality and Schema using PySpark
-# ==================================================================================
+# ==============================================
+# SCRIPT: Generate data to MySQL database
+# ==============================================
 # Purpose:
-#   - Perform schema validation against stored schema definitions for Bronze tables.
-#   - Check data quality rules: nullability and uniqueness constraints per table.
-#   - Log issues and updates for monitoring and debugging.
-# ==================================================================================
+#   - Simulate real-time coffee orders
+# ==============================================
 
 import random
 import time
@@ -84,63 +82,26 @@ def save_to_redis(order_id, customer_id, payment_method_id, num_items):
     r.expire(f"order:{order_id}", 100) 
 
 
-# def main():
-#     with get_conn_cursor() as (conn, cursor):
-#         products = get_products(cursor)
-
-#         while True:
-#             order_id = fake.uuid4()
-#             timestamp = datetime.now()
-#             customer_id = random.randint(1, 1000000)
-#             store_id = random.randint(1, 1000)
-#             payment_method_id = random.randint(1, 12)
-
-#             try:
-#                 create_order(cursor, order_id, customer_id, store_id, payment_method_id, timestamp)
-#                 num_items = insert_order_items(cursor, order_id, products)
-#                 save_to_redis(order_id, customer_id, payment_method_id, num_items)
-#                 conn.commit()
-#                 print(f"Created order {order_id} with {num_items} item(s)")
-#             except Exception as insert_err:
-#                 conn.rollback()
-#                 print(f"Failed to insert order {order_id}: {insert_err}")
-
-#             time.sleep(0.01)
-
 def main():
     with get_conn_cursor() as (conn, cursor):
         products = get_products(cursor)
 
-        minute_orders = 0
-        start_time = time.time()
-        last_report_time = start_time
-
         while True:
             order_id = fake.uuid4()
             timestamp = datetime.now()
-            customer_id = random.randint(1, 20000)
+            customer_id = random.randint(1, 1000000)
             store_id = random.randint(1, 1000)
-            payment_method_id = random.randint(1, 9)
+            payment_method_id = random.randint(1, 12)
 
             try:
                 create_order(cursor, order_id, customer_id, store_id, payment_method_id, timestamp)
                 num_items = insert_order_items(cursor, order_id, products)
                 save_to_redis(order_id, customer_id, payment_method_id, num_items)
                 conn.commit()
-                minute_orders += 1
-                print(f"✅ Created order {order_id} with {num_items} product(s)")
+                print(f"Created order {order_id} with {num_items} item(s)")
             except Exception as insert_err:
                 conn.rollback()
-                print(f"❌ Failed to insert order {order_id}: {insert_err}")
-
-            # Kiểm tra nếu đã đủ 60 giây để in báo cáo
-            now = time.time()
-            if now - last_report_time >= 60:
-                print("=" * 80)
-                print(f"⏱ 1 phút vừa qua: {minute_orders} orders")
-                print("=" * 80)
-                minute_orders = 0
-                last_report_time = now
+                print(f"Failed to insert order {order_id}: {insert_err}")
 
             time.sleep(0.0001)
 
