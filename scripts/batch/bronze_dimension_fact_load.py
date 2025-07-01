@@ -67,6 +67,7 @@ def incremental_load_orders(spark: SparkSession) -> None:
         orders_path = "s3a://bronze-layer/brz.orders"
         details_path = "s3a://bronze-layer/brz.order_details"
 
+        # If Bronze data exists in MinIO, perform incremental load; otherwise, do full load
         if check_minio_has_data(bucket="bronze-layer", prefix="brz.orders/"):
             logger.info("[BRONZE][orders] Existing Bronze data found -> Checking for new records.")
             existing_orders = spark.read.parquet(orders_path)
@@ -149,6 +150,7 @@ def incremental_load_dimension(spark: SparkSession, table_name: str, time_col="u
         logger.info(f"[BRONZE][{table_name}] --- Start processing ---")
         source_df = read_mysql_table(spark, table_name)
 
+        # If Bronze data exists in MinIO, perform incremental load; otherwise, do full load
         if check_minio_has_data(bucket="bronze-layer", prefix=f"brz.{table_name}/"):
             logger.info(f"[BRONZE][{table_name}] Existing Bronze data found -> Checking for new records.")
             existing_df = spark.read.parquet(bronze_path)
