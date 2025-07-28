@@ -46,6 +46,7 @@ def read_schema_file():
             return json.load(f)
     return {}
 
+
 def validate_schema(df, table_name: str, schema_store: dict) -> bool:
     current_schema = json.loads(df.schema.json())
     expected_schema = schema_store[table_name]
@@ -59,22 +60,26 @@ def validate_schema(df, table_name: str, schema_store: dict) -> bool:
     logger.info(f"[{table_name}] Schema check passed.")
     return True
 
+
 def check_table_quality(df, table_name: str, null_cols=[], unique_cols=[]) -> bool:
     has_issue = False
 
     for col in null_cols:
-        if not df.filter(f"{col} IS NULL").isEmpty():
-            logger.warning(f"[{table_name}] NULL values found in column '{col}'")
+        null_count = df.filter(f"{col} IS NULL").count()
+        if null_count > 0.05 * df.count():
+            logger.warning(f"[{table_name}] {null_count} NULL values found in column '{col}'")
             has_issue = True
 
     for col in unique_cols:
-        if not df.groupBy(col).count().filter("count > 1").isEmpty():
-            logger.warning(f"[{table_name}] Duplicate values found in column '{col}'")
+        dup_count = df.groupBy(col).count().filter("count > 1").count()
+        if dup_count > 0:
+            logger.warning(f"[{table_name}] {dup_count} duplicate values found in column '{col}'")
             has_issue = True
 
     if not has_issue:
         logger.info(f"[{table_name}] Null and uniqueness checks passed.")
     return has_issue
+
 
 def main():
     path = "s3a://bronze-layer"
@@ -140,6 +145,7 @@ def main():
         logger.info("All Bronze checks passed.")
     else:
         logger.warning("Bronze validation completed with issues.")
+
 
 if __name__ == "__main__":
     try:

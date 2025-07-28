@@ -6,15 +6,18 @@
 #   and product details from MySQL into Redis for fast access during
 #   real-time product recommendation processing.
 # ===================================================================
-import configparser
+
+import sys
 import logging
 from pathlib import Path
 
-import mysql.connector
 import redis
-from mysql_config import get_mysql_config
+import mysql.connector
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+sys.path.append(str(BASE_DIR))
+
+from scripts.utils import get_mysql_config
 
 
 # Set up logging
@@ -29,14 +32,14 @@ r = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
 
 def cache_diamond_customers(cursor):
     try:
-        cursor.execute("SELECT id FROM diamond_customers")
+        cursor.execute("SELECT id FROM customers WHERE tier = 'diamond'")
         rows = cursor.fetchall()
         for row in rows:
             r.sadd("diamond_customers", row["id"])
 
         logging.info(f"Cached {len(rows)} diamond customer IDs to Redis")
     except Exception as e:
-        logging.exception("Failed to cache diamond customers")
+        logging.exception(f"Failed to cache diamond customers: {e}")
 
 
 def cache_payment_method(cursor):
@@ -49,7 +52,7 @@ def cache_payment_method(cursor):
         else:
             logging.warning("No ACB payment method found in database")
     except Exception as e:
-        logging.exception("Failed to cache payment method")
+        logging.exception(f"Failed to cache payment method: {e}")
 
 
 def cache_product(cursor):
@@ -63,7 +66,7 @@ def cache_product(cursor):
             )
         logging.info(f"Cached {len(rows)} products to Redis")
     except Exception as e:
-        logging.exception("Failed to cache products")
+        logging.exception("Failed to cache products:", e)
 
 
 def main():
@@ -78,7 +81,7 @@ def main():
         cache_payment_method(cursor)
 
     except Exception as e:
-        logging.exception("Failed to connect to MySQL or execute caching tasks")
+        logging.exception("Failed to connect to MySQL or execute caching tasks:", e)
 
     finally:
         cursor.close()

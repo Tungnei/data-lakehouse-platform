@@ -12,12 +12,11 @@
 import os
 import sys
 import logging
-import configparser
 from pathlib import Path
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
-from utils import check_minio_has_data
+from scripts.utils import check_minio_has_data
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -138,11 +137,12 @@ def incremental_load_order_with_suggestion(spark: SparkSession) -> None:
                                 .withColumn("day", dayofmonth("suggest_date")) \
                                 .drop("suggest_date")
                                         
-        order_with_suggestion.write.mode("append").parquet("s3a://bronze-layer/brz.order_suggestion_accepted")
+        order_with_suggestion.write.partitionBy("year", "month", "day").mode("append").parquet("s3a://bronze-layer/brz.order_suggestion_accepted")
         logger.info("[BRONZE][order_suggestion_accepted] --- Successfully wrote to Bronze ---")
     except Exception as e:
         logger.error(f"[BRONZE][order_suggestion_accepted] Error during load: {e}")
         raise
+
 
 def incremental_load_dimension(spark: SparkSession, table_name: str, time_col="updated_at") -> None:
     bronze_path = f"s3a://bronze-layer/brz.{table_name}"
@@ -184,7 +184,7 @@ def main():
         incremental_load_orders(spark)
         incremental_load_order_with_suggestion(spark)
 
-        dimension_tables = ["stores", "product_category", "products", "payment_method", "diamond_customers"]
+        dimension_tables = ["stores", "product_category", "products", "payment_method", "customers"]
         for table in dimension_tables:
             incremental_load_dimension(spark, table)
 

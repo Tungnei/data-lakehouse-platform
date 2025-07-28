@@ -1,4 +1,4 @@
-Set-Location -Path "C:\Users\ASUS\Project\coffee-sales-project"
+Set-Location -Path "C:\Users\ASUS\Documents\GitHub\coffee-sales-data-pipeline"
 
 # Run the script to create necessary tables in the MySQL database
 python scripts/database/create_table.py
@@ -17,4 +17,4 @@ Invoke-WebRequest -Uri "http://localhost:8083/connectors" -Method Post -ContentT
 Write-Host "============================================================"
 
 # Start the Kafka client to listen for new order events and handle product suggestions logic
-python scripts/real-time/kafka_client.py
+# python scripts/real-time/kafka_client.py

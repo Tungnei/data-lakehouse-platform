@@ -21,9 +21,12 @@ from pathlib import Path
 
 import mysql.connector
 from mysql.connector import errorcode
-from mysql_config import get_mysql_config
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+sys.path.append(str(BASE_DIR))
+
+from scripts.utils import get_mysql_config
+
 
 def connect_database(user, password, host, database):
     """Connect to MySQL database."""
@@ -81,7 +84,7 @@ def main():
         'payment_method': str(BASE_DIR / 'data' / 'payment_method.csv'),
         'product_category': str(BASE_DIR / 'data' / 'product_category.csv'),
         'products': str(BASE_DIR / 'data' / 'products.csv'),
-        'diamond_customers': str(BASE_DIR / 'data' / 'diamond_customers.csv')
+        'customers': str(BASE_DIR / 'data' / 'customers.csv')
     }
     for table, csv_path in tables_and_files.items():
         load_data_to_table(cursor, table, csv_path)

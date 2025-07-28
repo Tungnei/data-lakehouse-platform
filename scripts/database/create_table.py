@@ -67,11 +67,12 @@ TABLES['products'] = (
     ") ENGINE=InnoDB"
 )
 
-TABLES['diamond_customers'] = (
-    "CREATE TABLE `diamond_customers` (" \
+TABLES['customers'] = (
+    "CREATE TABLE `customers` (" \
     "   `id` int NOT NULL," \
     "   `name` varchar(25) NOT NULL," \
     "   `phone_number` int NOT NULL," \
+    "   `tier` ENUM('regular', 'silver', 'gold', 'diamond') NOT NULL," \
     "   `updated_at` DATETIME," \
     "   PRIMARY KEY (`id`)" \
     ") ENGINE=InnoDB"
@@ -84,7 +85,7 @@ TABLES['orders'] = (
     "   `customer_id` int," \
     "   `store_id` int NOT NULL," \
     "   `payment_method_id` int NOT NULL," \
-    "   `status` varchar(25) NOT NULL," \
+    "   `num_products` int NOT NULL," \
     "   PRIMARY KEY (`id`)," \
     "   CONSTRAINT `orders_fk_1` FOREIGN KEY (`store_id`)" \
     "       REFERENCES `stores` (`id`)," \
@@ -111,6 +112,8 @@ TABLES['order_details'] = (
 def connect_database(user, password, host, database):
     """Connect to MySQL database."""
     try:
+        print(f"Running script: {__file__}")
+
         conn = mysql.connector.connect(
             user=user,
             password=password,

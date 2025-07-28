@@ -43,18 +43,33 @@ spark.sparkContext.setLogLevel("ERROR")
 def read_parquet_cached(path: str):
     return spark.read.parquet(path).cache()
 
+
 def run_check(df, check: Check, label: str):
     result = VerificationSuite(spark).onData(df).addCheck(check).run()
-    logger.info(f"[{label}] - Data Quality Check Completed")
+    status = result.status
+
+    if status == "Success":
+        logger.info(f"[{label}] Data Quality Check PASSED")
+    else:
+        logger.warning(f"[{label}] Data Quality Check FAILED")
+        for check_result in result.checkResults:
+            constraint_results = result.checkResults[check_result].constraintResults
+            for c in constraint_results:
+                if c.status != "Success":
+                    logger.warning(f"[{label}] Failed Constraint: {c.constraint}")
+                    logger.warning(f"[{label}] Reason: {c.message}")
     return result
+
 
 def check_uniqueness(df, column_name: str, label: str):
     total = df.count()
     distinct = df.select(countDistinct(column_name)).first()[0]
+
     if total == distinct:
-        logger.info(f"[{label}] - Data Constraint Check Passed")
+        logger.info(f"[{label}] Column '{column_name}' is unique ({distinct}/{total})")
     else:
-        logger.info(f"[{label}] - Data Constraint Check Failed")
+        duplicates = total - distinct
+        logger.warning(f"[{label}] Column '{column_name}' has {duplicates} duplicate values ({distinct}/{total})")
 
 # LOAD DATA
 silver_path = "s3a://silver-layer"

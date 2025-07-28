@@ -110,10 +110,10 @@ def cleand_payment_method(spark, silver_path, table):
     logger.info(f"[SILVER][{table}] Successfully wrote records to '{table}' table in Silver Layer.")
 
 
-def cleaned_diamond_customer(spark, silver_path, table):
-    logger.info(f"[SILVER][{table}] --- Starting load for 'diamond_customers' ---")
+def cleaned_customer(spark, silver_path, table):
+    logger.info(f"[SILVER][{table}] --- Starting load for 'customers' ---")
 
-    source_df = read_bronze_layer(spark, table="brz.diamond_customers")
+    source_df = read_bronze_layer(spark, table="brz.customers")
     source_df.write.mode("overwrite").parquet(f"{silver_path}/{table}")
 
     logger.info(f"[SILVER][{table}] Successfully wrote records to '{table}' table in Silver Layer.")
@@ -128,7 +128,7 @@ def main():
         cleand_stores(spark, silver_path, table="slv.stores")
         cleand_products(spark, silver_path, table="slv.products")
         cleand_payment_method(spark, silver_path, table="slv.payment_method")
-        cleaned_diamond_customer(spark, silver_path, table="slv.diamond_customers")
+        cleaned_customer(spark, silver_path, table="slv.customers")
 
         spark.stop()
     except Exception as e:
