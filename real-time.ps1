@@ -1,5 +1,3 @@
-Set-Location -Path "C:\Users\ASUS\Documents\GitHub\coffee-sales-data-pipeline"
-
 # Run the script to create necessary tables in the MySQL database
 python scripts/database/create_table.py
 Write-Host "============================================================"
