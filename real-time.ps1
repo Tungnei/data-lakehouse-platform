@@ -13,6 +13,3 @@ Write-Host "============================================================"
 # Register the MySQL source connector to Kafka Connect for capturing change data (CDC)
 Invoke-WebRequest -Uri "http://localhost:8083/connectors" -Method Post -ContentType "application/json" -InFile "./scripts/real-time/mysql-src-connector.json"
 Write-Host "============================================================"
-
-# Start the Kafka client to listen for new order events and handle product suggestions logic
-# python scripts/real-time/kafka_client.py
