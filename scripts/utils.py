@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 
 from minio import Minio
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 dotenv_path = BASE_DIR / ".env"
 load_dotenv(dotenv_path)

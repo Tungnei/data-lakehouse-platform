@@ -8,6 +8,7 @@
 # Usage:
 #   - Can be queried directly for analytics and reporting.
 # ==================================================================================
+
 import logging
 from pathlib import Path
 
@@ -15,7 +16,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from delta.tables import DeltaTable
 
-from scripts.utils import check_minio_has_data
+from utils import check_minio_has_data
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 

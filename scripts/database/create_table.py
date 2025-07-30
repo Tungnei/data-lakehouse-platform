@@ -112,8 +112,6 @@ TABLES['order_details'] = (
 def connect_database(user, password, host, database):
     """Connect to MySQL database."""
     try:
-        print(f"Running script: {__file__}")
-
         conn = mysql.connector.connect(
             user=user,
             password=password,
