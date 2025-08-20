@@ -1,4 +1,4 @@
-# Coffee Sales Data Pipeline
+# Coffee Chain Data Platform
 
 - Clone this repository:
 ```bash
